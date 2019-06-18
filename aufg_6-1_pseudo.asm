@@ -30,10 +30,10 @@ strtolower:		# Needs a0 to be the Adress of a string
 			# uses t0(character), t1(boolean), t2(boolean), t3(temporary value)
 	lb	$t0, 0($a0)		# tempchar = *(Adresse+0)
 	beq	$t0, $zero, stlend	# while(tempchar != '\0')
-	ori	$t3, $zero, 0x5a	# if((x>'A') && (x<'Z'))
-	slt	$t1, $t0, $t3		# if((x>'A') && (x<'Z'))
-	ori	$t3, $zero, 0x41	# if((x>'A') && (x<'Z'))
-	slt	$t2, $t3, $t0		# if((x>'A') && (x<'Z'))
+	ori	$t3, $zero, 0x5b	# if((x>='A') && (x<='Z'))
+	slt	$t1, $t0, $t3		# if((x>='A') && (x<='Z'))
+	ori	$t3, $zero, 0x40	# if((x>='A') && (x<='Z'))
+	slt	$t2, $t3, $t0		# if((x>='A') && (x<='Z'))
 	beq	$t1,$t2, stllowca	# goto stllowca
 	j	stlinc			# else
 stllowca:
