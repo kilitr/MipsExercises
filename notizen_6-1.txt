@@ -1,0 +1,5 @@
+x < 'Z'		slt	t, x, 0x5A
+x > 'A'		slt	t, 0x41, x
+'A' < x
+
+'a' - 'A' = 0x20
