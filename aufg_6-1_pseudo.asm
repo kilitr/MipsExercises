@@ -71,8 +71,50 @@ strta_end:
 	jr	$ra
 
 
-strcat:
-	
+strcat:		# a0	-Adresse zum schreiben
+		# a1	-Adresse des ersten Strings
+		# a2	-Adresse des zweiten Strings
+		# t0	-Temporärer Charakter
+	lbu	$t0, 0($a1)			# Lade character von str1
+	beq	$t0, $zero, strcat_next		# Wenn '/0' gehe zu nächstem string
+	sb	$t0, 0($a0)			# sonst speichere character in str3
+	addi	$a0, $a0, 1
+	addi	$a1, $a1, 1
+	j	strcat
+strcat_next:
+	lbu	$t0, 0($a2)			# Lade character von str2
+	beq	$t0, $zero, strcat_end
+	sb	$t0, 0($a0)
+	addi	$a0, $a0, 1
+	addi	$a2, $a2, 1
+	j	strcat_next
+strcat_end:
+	jr	$ra
+
+
+strispalindrom:	# a0	-Startaddress String
+		# t0	-Endaddress String
+		# t1	-character vorn
+		# t2	-character hinten
+	or	$t0, $a0, $a0
+	or	$v0, $zero, $zero
+strispalindrom_get_end:					# Bestimme end adresse
+	lbu	$t1, 0($t0)
+	beq	$t1, 0xff, strispalindrom_compare
+	addi	$t0, $t0, 1
+	j	strispalindrom_get_end
+strispalindrom_compare:
+	subi	$t0, $t0, 1			# ziehe zuerst 1 von der endadresse ab, da inhalt NULL ist
+	blt	$t0, $a0, strispalindrom_end_success	# wenn die beiden Adressen aneinander vorbeigelaufen sind ist string reversed
+	lbu	$t1, 0($a0)			# Swap start
+	lbu	$t2, 0($t0)
+	bne	$t1, $t2, strispalindrom_end
+	addi	$a0, $a0, 1
+	j	strispalindrom_compare			# wiederhole bis abbruchbedingung erfüllt
+strispalindrom_end_success:
+	ori	$v0, $zero, 0x1
+strispalindrom_end:
+	jr	$ra
 
 	
 main:
@@ -84,7 +126,9 @@ main:
 	jal	strturnaround
 	la	$a0, str2
 	jal	strturnaround
-	la	$a0, str1
-	la	$a1, str2
-	la	$a2, str3
+	la	$a0, str3
+	la	$a1, str1
+	la	$a2, str2
 	jal	strcat
+	la	$a0, str3
+	jal	strispalindrom
