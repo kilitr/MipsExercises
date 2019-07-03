@@ -1,0 +1,110 @@
+	.data
+	
+.align 2
+z1:		.word 0
+.align 2
+n1:		.word 0
+prompt_num:	.asciiz "Zaehler>"
+prompt_denum:	.asciiz "Nenner>"
+str_result:	.asciiz "Reduzierte Darstellung "
+str_ggt:	.asciiz " ggT "
+prompt_continue:.asciiz "\nWeitere Berechnung (0 exit)>"
+	
+	.text
+main:
+	jal	readfraction
+	move	$a0, $v0	# zaehler
+	move	$a1, $v1	# nenner
+	la	$a2, z1
+	la	$a3, n1
+	jal	reduce_fraction
+	move	$a0, $v0
+	jal	show_result
+	
+	la	$a0, prompt_continue
+	li	$v0, 4
+	syscall
+	li	$v0, 5
+	syscall
+	bne	$v0, $zero, main
+	
+	j	end
+
+show_result:
+	move	$t0, $a0
+	la	$a0, str_result
+	li	$v0, 4
+	syscall
+	lw	$a0, z1
+	li	$v0, 1
+	syscall
+	li	$a0, '/'
+	li	$v0, 11
+	syscall
+	lw	$a0, n1
+	li	$v0, 1
+	syscall
+	la	$a0, str_ggt
+	li	$v0, 4
+	syscall
+	move	$a0, $t0
+	li	$v0, 1
+	syscall
+	jr	$ra
+reduce_fraction:	# a0,a1,a2,a3
+# if(n == 0) return 0;
+	move	$v0, $zero
+	beqz	$a1, reduce_fraction_end
+# t = euklid(z,n);
+	addi	$sp, $sp, -12
+	sw	$a0, 0($sp)
+	sw	$a1, 4($sp)
+	sw	$ra, 8($sp)
+	jal	euklid
+	lw	$a0, 0($sp)
+	lw	$a1, 4($sp)
+	lw	$ra, 8($sp)
+	addiu	$sp, $sp, 12
+# *z1 = z/t;
+	div	$a0, $v0
+	mflo	$t1
+	sw	$t1, z1
+# *n1 = n/t;
+	div	$a1, $v0
+	mflo	$t1
+	sw	$t1, n1
+reduce_fraction_end:
+nop
+	jr	$ra
+
+readfraction:	# v0 - zaehler
+		# v1 - nenner
+	la	$a0, prompt_num
+	li	$v0, 4
+	syscall
+	li	$v0, 5
+	syscall
+	move	$t0, $v0
+	la	$a0, prompt_denum
+	li	$v0, 4
+	syscall
+	li	$v0, 5
+	syscall
+	move	$v1, $v0
+	move	$v0, $t0
+	jr	$31
+
+euklid:	or	$v0, $zero, $a1	#(3) r2 <-- r5
+	beq	$a0, $zero, return	#(4) if(r4 == 0) goto (10)
+test:	beq	$a1, $zero, setval	#(5) if(r5 == 0) goto (9)
+	slt	$8, $a1, $a0	#(6) if(r4 > r5)
+	beq	$8, $zero, false
+	sub	$a0, $a0, $a1	# r4 <-- r4 - r5
+	j	true
+false:	sub	$a1, $a1, $a0	#(7) else r5 <-- r5 - r4
+true:	j test			#(8) goto (5)
+setval:	or	$v0, $zero, $a0	#(9) r2 <-- r4
+return:	jr	$ra
+
+end:	li	$v0, 10
+	syscall
